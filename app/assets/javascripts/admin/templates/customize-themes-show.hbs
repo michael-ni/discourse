@@ -50,7 +50,10 @@
     <h3>{{i18n "admin.customize.theme.included_themes"}}</h3>
     {{#unless model.childThemes.length}}
     <p>
-      {{i18n "admin.customize.theme.no_child_themes"}}
+      <label class='checkbox-label'>
+        {{input type="checkbox" checked=allowChildThemes}}
+        {{i18n "admin.customize.theme.child_themes_check"}}
+      </label>
     </p>
     {{else}}
     <ul>

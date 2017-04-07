@@ -31,8 +31,12 @@ export default Ember.Controller.extend({
     return  colorSchemeId !== existingId;
   },
 
-  @computed("availableChildThemes", "model.childThemes.@each", "model")
-  selectableChildThemes(available, childThemes) {
+  @computed("availableChildThemes", "model.childThemes.@each", "model", "allowChildThemes")
+  selectableChildThemes(available, childThemes, model, allowChildThemes) {
+    if (!allowChildThemes && (!childThemes || childThemes.length === 0)) {
+      return null;
+    }
+
     let themes = [];
     available.forEach(t=> {
       if (!childThemes || (childThemes.indexOf(t) === -1)) {
