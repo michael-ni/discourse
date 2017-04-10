@@ -32,7 +32,7 @@ export default Ember.Controller.extend({
     },
 
     newColorScheme() {
-      showModal('color-scheme-select-base', { model: this.get('baseColorSchemes'), admin: true});
+      showModal('admin-color-scheme-select-base', { model: this.get('baseColorSchemes'), admin: true});
     },
 
 

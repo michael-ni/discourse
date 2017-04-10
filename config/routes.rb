@@ -183,7 +183,9 @@ Discourse::Application.routes.draw do
     post "flags/agree/:id" => "flags#agree"
     post "flags/disagree/:id" => "flags#disagree"
     post "flags/defer/:id" => "flags#defer"
+
     resources :themes, constraints: AdminConstraint.new
+    post "themes/import" => "themes#import"
 
     scope "/customize", constraints: AdminConstraint.new do
       resources :user_fields, constraints: AdminConstraint.new

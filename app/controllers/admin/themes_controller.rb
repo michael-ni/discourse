@@ -2,6 +2,33 @@ class Admin::ThemesController < Admin::AdminController
 
   skip_before_filter :check_xhr, only: [:show]
 
+  def import
+
+    @theme = nil
+    if params[:theme]
+      json = JSON::parse(params[:theme].read)
+      theme = json['theme']
+
+      @theme = Theme.new(name: theme["name"], user_id: current_user.id)
+      theme["theme_fields"]&.each do |field|
+        @theme.set_field(field["target"], field["name"], field["value"])
+      end
+
+      if @theme.save
+        log_theme_change(nil, theme)
+        render json: @theme, status: :created
+      else
+        render json: @theme.errors, status: :unprocessable_entity
+      end
+    elsif params[:remote]
+      @theme = Theme.import_remote(params[:remote])
+      render json: @theme, status: :created
+    else
+      render json: @theme.errors, status: :unprocessable_entity
+    end
+
+  end
+
   def index
     @theme = Theme.order(:name).includes(:theme_fields)
     @color_schemes = ColorScheme.all.to_a

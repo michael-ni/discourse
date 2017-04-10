@@ -2763,7 +2763,6 @@ en:
         new: "New"
         new_style: "New Style"
         import: "Import"
-        import_title: "Select a file or paste text"
         delete: "Delete"
         delete_confirm: "Delete this theme?"
         about: "Modify CSS stylesheets and HTML headers on the site. Add a customization to start."
@@ -2780,6 +2779,7 @@ en:
           revert_confirm: "Are you sure you want to revert your changes?"
 
         theme:
+          import_theme: "Import Theme"
           customize_desc: "Customize:"
           title: "Themes"
           long_title: "Amend colors, CSS and HTML contents of your site"
@@ -2797,6 +2797,8 @@ en:
           css_html: "Custom CSS/HTML"
           edit_css_html: "Edit CSS/HTML"
           edit_css_html_help: "You have not edited any CSS or HTML"
+          import_web_tip: "Repository containing theme"
+          import_file_tip: ".dcstyle.json file containing theme"
           scss:
             text: "CSS"
             title: "Enter custom CSS, we accept all valid CSS and SCSS styles"
