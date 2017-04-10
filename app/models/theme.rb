@@ -95,22 +95,40 @@ class Theme < ActiveRecord::Base
     theme_info = JSON.parse(importer["about.json"])
     theme = new(user_id: user&.id || -1, name: theme_info["name"])
 
-    targets.keys.each do |target|
-      ALLOWED_FIELDS.each do |field|
-        value = importer["#{target}/#{field=="scss"?"#{target}.scss":"#{field}.html"}"]
-        theme.set_field(target.to_sym, field, value) if value
-      end
-    end
-
     theme.remote_url = importer.url
     theme.remote_version = importer.version
     theme.local_version = importer.version
-
+    theme.update_from_remote(importer)
     theme.save!
     theme
   ensure
     begin
       importer.cleanup!
+    rescue => e
+      Rails.logger.warn("Failed cleanup remote git #{e}")
+    end
+  end
+
+  def update_from_remote(importer=nil)
+    return unless remote_url
+    cleanup = false
+    unless importer
+      cleanup = true
+      importer = GitImporter.new(remote_url)
+      importer.import!
+    end
+
+    Theme.targets.keys.each do |target|
+      ALLOWED_FIELDS.each do |field|
+        value = importer["#{target}/#{field=="scss"?"#{target}.scss":"#{field}.html"}"]
+        set_field(target.to_sym, field, value)
+      end
+    end
+
+    self
+  ensure
+    begin
+      importer.cleanup! if cleanup
     rescue => e
       Rails.logger.warn("Failed cleanup remote git #{e}")
     end
@@ -239,10 +257,16 @@ class Theme < ActiveRecord::Base
 
     field = theme_fields.find{|f| f.name==name && f.target == target_id}
     if field
-      field.value = value
-      changed_fields << field
+      if value.blank?
+        field.destroy
+      else
+        if field.value != value
+          field.value = value
+          changed_fields << field
+        end
+      end
     else
-      theme_fields.build(target: target_id, value: value, name: name)
+      theme_fields.build(target: target_id, value: value, name: name) if value.present?
     end
   end
 

@@ -183,6 +183,18 @@ HTML
       expect(mapped["0-header"]).to eq("I AM HEADER")
       expect(mapped["1-scss"]).to eq("body {color: red;}")
 
+      File.write("#{initial_repo}/common/header.html", "I AM UPDATED")
+      `cd #{initial_repo} && git commit -am "update"`
+
+      @theme.update_from_remote
+      @theme.save
+      @theme.reload
+
+      mapped = Hash[*@theme.theme_fields.map{|f| ["#{f.target}-#{f.name}", f.value]}.flatten]
+
+      expect(mapped["0-header"]).to eq("I AM UPDATED")
+      expect(mapped["1-scss"]).to eq("body {color: red;}")
+
     end
   end
 
