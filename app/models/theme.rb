@@ -1,8 +1,11 @@
 require_dependency 'distributed_cache'
 require_dependency 'stylesheet/compiler'
 require_dependency 'stylesheet/manager'
+require_dependency 'git_importer'
 
 class Theme < ActiveRecord::Base
+
+  ALLOWED_FIELDS = %w{scss head_tag header after_header body_tag footer}
 
   @cache = DistributedCache.new('theme')
 
@@ -83,6 +86,34 @@ class Theme < ActiveRecord::Base
 
   def self.targets
     @targets ||= Enum.new(common: 0, desktop: 1, mobile: 2)
+  end
+
+  def self.import_theme(url, user=Discourse.system_user)
+    importer = GitImporter.new(url)
+    importer.import!
+
+    theme_info = JSON.parse(importer["about.json"])
+    theme = new(user_id: user&.id || -1, name: theme_info["name"])
+
+    targets.keys.each do |target|
+      ALLOWED_FIELDS.each do |field|
+        value = importer["#{target}/#{field=="scss"?"#{target}.scss":"#{field}.html"}"]
+        theme.set_field(target.to_sym, field, value) if value
+      end
+    end
+
+    theme.remote_url = importer.url
+    theme.remote_version = importer.version
+    theme.local_version = importer.version
+
+    theme.save!
+    theme
+  ensure
+    begin
+      importer.cleanup!
+    rescue => e
+      Rails.logger.warn("Failed cleanup remote git #{e}")
+    end
   end
 
   def notify_scheme_change(clear_manager_cache=true)

@@ -114,11 +114,11 @@ class Wizard
       end
 
       @wizard.append_step('colors') do |step|
-        theme_id = ColorScheme.where(via_wizard: true).pluck(:theme_id)
+        theme_id = ColorScheme.where(via_wizard: true).pluck(:base_scheme_id)
         theme_id = theme_id.present? ? theme_id[0] : 'default'
 
         themes = step.add_field(id: 'theme_id', type: 'dropdown', required: true, value: theme_id)
-        ColorScheme.themes.each {|t| themes.add_choice(t[:id], data: t) }
+        ColorScheme.base_color_schemes.each {|t| themes.add_choice(t[:id], data: t) }
         step.add_field(id: 'theme_preview', type: 'component')
 
         step.on_update do |updater|
