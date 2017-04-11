@@ -33,6 +33,9 @@ describe RemoteTheme do
 
     it 'can correctly import a remote theme' do
 
+      time = Time.new('2000')
+      freeze_time time
+
       @theme = RemoteTheme.import_theme(initial_repo)
       remote = @theme.remote_theme
 
@@ -48,8 +51,18 @@ describe RemoteTheme do
       expect(mapped["0-header"]).to eq("I AM HEADER")
       expect(mapped["1-scss"]).to eq("body {color: red;}")
 
+      expect(remote.remote_updated_at).to eq(time)
+
       File.write("#{initial_repo}/common/header.html", "I AM UPDATED")
       `cd #{initial_repo} && git commit -am "update"`
+
+      time = Time.new('2001')
+      freeze_time time
+
+      remote.update_remote_version
+      expect(remote.commits_behind).to eq(1)
+      expect(remote.remote_version).to eq(`cd #{initial_repo} && git rev-parse HEAD`.strip)
+
 
       remote.update_from_remote
       @theme.save
@@ -59,6 +72,7 @@ describe RemoteTheme do
 
       expect(mapped["0-header"]).to eq("I AM UPDATED")
       expect(mapped["1-scss"]).to eq("body {color: red;}")
+      expect(remote.remote_updated_at).to eq(time)
 
     end
   end

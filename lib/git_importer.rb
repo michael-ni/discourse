@@ -14,6 +14,17 @@ class GitImporter
     Discourse::Utils.execute_command("git", "clone", "--depth", "1", @url, @temp_folder)
   end
 
+  def commits_since(hash)
+    commit_hash, commits_behind = nil
+
+    Dir.chdir(@temp_folder) do
+      commit_hash = Discourse::Utils.execute_command("git", "rev-parse", "HEAD").strip
+      commits_behind = Discourse::Utils.execute_command("git", "rev-list", "#{hash}..HEAD", "--count").strip
+    end
+
+    [commit_hash, commits_behind]
+  end
+
   def version
     Dir.chdir(@temp_folder) do
       Discourse::Utils.execute_command("git", "rev-parse", "HEAD").strip

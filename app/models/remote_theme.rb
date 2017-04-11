@@ -27,6 +27,12 @@ class RemoteTheme < ActiveRecord::Base
     end
   end
 
+  def update_remote_version
+    importer = GitImporter.new(remote_url)
+    importer.import!
+    self.remote_version, self.commits_behind = importer.commits_since(remote_version)
+  end
+
   def update_from_remote(importer=nil)
     return unless remote_url
     cleanup = false
@@ -42,6 +48,8 @@ class RemoteTheme < ActiveRecord::Base
         theme.set_field(target.to_sym, field, value)
       end
     end
+
+    self.remote_updated_at = Time.zone.now
 
     self
   ensure
