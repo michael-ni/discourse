@@ -21,7 +21,7 @@ class Admin::ThemesController < Admin::AdminController
         render json: @theme.errors, status: :unprocessable_entity
       end
     elsif params[:remote]
-      @theme = Theme.import_theme(params[:remote])
+      @theme = RemoteTheme.import_theme(params[:remote])
       render json: @theme, status: :created
     else
       render json: @theme.errors, status: :unprocessable_entity

@@ -91,7 +91,16 @@ export default Ember.Controller.extend({
     },
 
     applyDefault() {
-      this.get("model").saveChanges("default");
+      const model = this.get("model");
+      model.saveChanges("default").then(()=>{
+        if (model.get("default")) {
+          this.get("allThemes").forEach(theme=>{
+            if (theme !== model && theme.get('default')) {
+              theme.set("default", false);
+            }
+          });
+        }
+      });
     },
 
     applyUserSelectable() {

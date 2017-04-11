@@ -1,7 +1,6 @@
 require_dependency 'distributed_cache'
 require_dependency 'stylesheet/compiler'
 require_dependency 'stylesheet/manager'
-require_dependency 'git_importer'
 
 class Theme < ActiveRecord::Base
 
@@ -13,6 +12,7 @@ class Theme < ActiveRecord::Base
   has_many :theme_fields, dependent: :destroy
   has_many :child_theme_relation, class_name: 'ChildTheme', foreign_key: 'parent_theme_id', dependent: :destroy
   has_many :child_themes, through: :child_theme_relation, source: :child_theme
+  belongs_to :remote_theme
 
   before_create do
     self.key ||= SecureRandom.uuid
@@ -88,51 +88,6 @@ class Theme < ActiveRecord::Base
     @targets ||= Enum.new(common: 0, desktop: 1, mobile: 2)
   end
 
-  def self.import_theme(url, user=Discourse.system_user)
-    importer = GitImporter.new(url)
-    importer.import!
-
-    theme_info = JSON.parse(importer["about.json"])
-    theme = new(user_id: user&.id || -1, name: theme_info["name"])
-
-    theme.remote_url = importer.url
-    theme.remote_version = importer.version
-    theme.local_version = importer.version
-    theme.update_from_remote(importer)
-    theme.save!
-    theme
-  ensure
-    begin
-      importer.cleanup!
-    rescue => e
-      Rails.logger.warn("Failed cleanup remote git #{e}")
-    end
-  end
-
-  def update_from_remote(importer=nil)
-    return unless remote_url
-    cleanup = false
-    unless importer
-      cleanup = true
-      importer = GitImporter.new(remote_url)
-      importer.import!
-    end
-
-    Theme.targets.keys.each do |target|
-      ALLOWED_FIELDS.each do |field|
-        value = importer["#{target}/#{field=="scss"?"#{target}.scss":"#{field}.html"}"]
-        set_field(target.to_sym, field, value)
-      end
-    end
-
-    self
-  ensure
-    begin
-      importer.cleanup! if cleanup
-    rescue => e
-      Rails.logger.warn("Failed cleanup remote git #{e}")
-    end
-  end
 
   def notify_scheme_change(clear_manager_cache=true)
     Stylesheet::Manager.cache.clear if clear_manager_cache
@@ -291,8 +246,10 @@ end
 #  user_selectable  :boolean          default(FALSE), not null
 #  hidden           :boolean          default(FALSE), not null
 #  color_scheme_id  :integer
+#  remote_theme_id  :integer
 #
 # Indexes
 #
-#  index_themes_on_key  (key)
+#  index_themes_on_key              (key)
+#  index_themes_on_remote_theme_id  (remote_theme_id) UNIQUE
 #

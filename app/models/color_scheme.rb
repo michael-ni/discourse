@@ -186,12 +186,11 @@ end
 #
 # Table name: color_schemes
 #
-#  id           :integer          not null, primary key
-#  name         :string           not null
-#  versioned_id :integer
-#  version      :integer          default(1), not null
-#  created_at   :datetime         not null
-#  updated_at   :datetime         not null
-#  via_wizard   :boolean          default(FALSE), not null
-#  base_scheme_id     :string
+#  id             :integer          not null, primary key
+#  name           :string           not null
+#  version        :integer          default(1), not null
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  via_wizard     :boolean          default(FALSE), not null
+#  base_scheme_id :string
 #
